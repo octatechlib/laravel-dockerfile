@@ -1,0 +1,39 @@
+server {
+
+    listen     80;
+	listen     [::]:443;
+
+    server_name my.laravel.local;
+
+	access_log      /var/log/nginx/my.laravel.local-access.log;
+    error_log       /var/log/nginx/my.laravel.local-error.log;
+    rewrite_log     on;
+
+    root        /var/www/html/public;
+    index       index.php index.html index.htm;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    if (!-d \$request_filename) {
+        rewrite     ^/(.+)/$ /\$1 permanent;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass                  unix:/var/run/php/php7.4-fpm.sock;
+        fastcgi_index                 index.php;
+		fastcgi_split_path_info       ^(.+\.php)(.*)$;
+        include 					  /etc/nginx/fastcgi_params;
+		fastcgi_param                 SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_read_timeout          600;
+    }
+
+    location ~ /\.ht {
+      deny all;
+    }
+
+    location ~* \.(?:ico|css|js|jpe?g|JPG|png|svg|woff)$ {
+      expires 365d;
+    }
+}
